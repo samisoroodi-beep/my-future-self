@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#111111">
+  <title>My Future Self</title>
+
+  <style>
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,sans-serif;
+      background:#f5f1eb;
+      color:#111;
+    }
+    .app{
+      max-width:520px;
+      margin:auto;
+      padding:18px 16px 95px;
+    }
+    header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:16px;
+    }
+    .brand{
+      font-family:Georgia,serif;
+      font-size:24px;
+    }
+    .version{
+      font-size:11px;
+      color:#777;
+      border:1px solid #ddd5ca;
+      border-radius:20px;
+      padding:5px 9px;
+    }
+    .hero{
+      background:#111;
+      color:white;
+      border-radius:25px;
+      padding:22px;
+      margin-bottom:14px;
+    }
+    .hero h1{
+      font-family:Georgia,serif;
+      margin:6px 0;
+      font-size:27px;
+    }
+    .hero p{
+      line-height:1.8;
+      opacity:.8;
+      margin:0;
+      font-size:14px;
+    }
+    .card{
+      background:white;
+      border:1px solid #e5ded4;
+      border-radius:20px;
+      padding:16px;
+      margin-bottom:12px;
+    }
+    .metric{
+      font-size:29px;
+      font-weight:700;
+      margin-top:7px;
+    }
+    .muted{
+      color:#777;
+      font-size:12px;
+    }
+    input,select,textarea{
+      width:100%;
+      margin-top:8px;
+      border:1px solid #e2dbd1;
+      background:white;
+      border-radius:13px;
+      padding:12px;
+      font-size:15px;
+    }
+    textarea{
+      min-height:80px;
+      resize:vertical;
+    }
+    button{
+      cursor:pointer;
+      border:0;
+      border-radius:13px;
+      padding:12px;
+      font-size:14px;
+    }
+    .primary{
+      width:100%;
+      margin-top:10px;
+      background:#111;
+      color:white;
+    }
+    .bottles{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+    .bottle{
+      width:44px;
+      height:62px;
+      border:2px solid #111;
+      background:white;
+      border-radius:12px 12px 8px 8px;
+    }
+    .bottle.on{
+      color:white;
+      background:#111;
+    }
+    .entry{
+      padding:12px 0;
+      border-top:1px solid #eee7de;
+    }
+    .entry:first-child{
+      border-top:0;
+    }
+    .entry small{
+      display:block;
+      color:#777;
+      margin-top:5px;
+    }
+    .section{display:none}
+    .section.active{display:block}
+    nav{
+      position:fixed;
+      bottom:12px;
+      left:50%;
+      transform:translateX(-50%);
+      width:min(500px,calc(100% - 24px));
+      padding:8px;
+      background:#111;
+      border-radius:20px;
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+    }
+    nav button{
+      color:white;
+      background:transparent;
+      padding:10px 2px;
+      font-size:12px;
+    }
+  </style>
+</head>
+
+<body>
+<div class="app">
+
+  <header>
+    <div class="brand">My Future Self</div>
+    <div class="version">Founder 0.1</div>
+  </header>
+
+  <section id="home" class="section active">
+
+    <div class="hero">
+      <small>Future Sami</small>
+      <h1>امروز فقط صفر نباش.</h1>
+      <p>
+        لازم نیست همه چیز کامل باشد؛ یک انتخاب درست،
+        یک وعده ثبت‌شده یا یک بطری آب کافی است.
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="muted">وزن امروز</div>
+      <div class="metric">
+        <span id="weightView">—</span> kg
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="muted">آب امروز</div>
+      <div class="metric">
+        <span id="waterView">0.0</span> L
+      </div>
+
+      <div id="bottles" class="bottles"></div>
+    </div>
+
+    <div class="card">
+      <strong>پیام Future Coach</strong>
+      <p id="coach" style="line-height:1.8">
+        امروز فقط یک کار کوچک را کامل کن.
+      </p>
+    </div>
+
+  </section>
+
+  <section id="log" class="section">
+
+    <div class="card">
+      <strong>ثبت وزن</strong>
+      <input id="weightInput" type="number" step="0.1"
+             placeholder="مثلاً 74.1">
+      <button class="primary" onclick="saveWeight()">
+        ثبت وزن
+      </button>
+    </div>
+
+    <div class="card">
+      <strong>ثبت غذا یا نوشیدنی</strong>
+
+      <select id="mealType">
+        <option>صبحانه</option>
+        <option>میان‌وعده</option>
+        <option>ناهار</option>
+        <option>عصرانه</option>
+        <option>شام</option>
+        <option>نوشیدنی</option>
+        <option>مکمل</option>
+      </select>
+
+      <textarea id="foodText"
+        placeholder="مثلاً یک تخم‌مرغ، نصف آووکادو و دو تست"></textarea>
+
+      <input id="calorieInput" type="number"
+             placeholder="کالری تقریبی؛ اختیاری">
+
+      <button class="primary" onclick="addFood()">
+        ثبت در تایم‌لاین
+      </button>
+    </div>
+
+    <div class="card">
+      <strong>ثبت فعالیت</strong>
+
+      <input id="activityInput"
+        placeholder="مثلاً ۱۰ دقیقه پیاده‌روی بعد از غذا">
+
+      <button class="primary" onclick="addActivity()">
+        ثبت فعالیت
+      </button>
+    </div>
+
+  </section>
+
+  <section id="timeline" class="section">
+
+    <div class="card">
+      <strong>تایم‌لاین امروز</strong>
+      <div id="entries"></div>
+    </div>
+
+  </section>
+
+  <section id="journal" class="section">
+
+    <div class="card">
+      <strong>ژورنال امروز</strong>
+
+      <select id="mood">
+        <option>پرانرژی</option>
+        <option>آرام</option>
+        <option>معمولی</option>
+        <option>خسته</option>
+        <option>پراسترس</option>
+      </select>
+
+      <textarea id="journalText"
+        placeholder="امروز درباره خودم چه فهمیدم؟"></textarea>
+
+      <button class="primary" onclick="saveJournal()">
+        ذخیره ژورنال
+      </button>
+    </div>
+
+  </section>
+
+</div>
+
+<nav>
+  <button onclick="showSection('home')">خانه</button>
+  <button onclick="showSection('log')">ثبت</button>
+  <button onclick="showSection('timeline')">تایم‌لاین</button>
+  <button onclick="showSection('journal')">ژورنال</button>
+</nav>
+
+<script>
+  const STORAGE_KEY = "my-future-self-founder";
+
+  let data = {
+    weight: null,
+    water: 0,
+    entries: [],
+    journal: null
+  };
+
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) data = JSON.parse(saved);
+  } catch (error) {}
+
+  function saveData() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    render();
+  }
+
+  function currentTime() {
+    return new Date().toLocaleTimeString("fa-IR", {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  }
+
+  function showSection(id) {
+    document.querySelectorAll(".section").forEach(section => {
+      section.classList.remove("active");
+    });
+
+    document.getElementById(id).classList.add("active");
+    window.scrollTo(0, 0);
+  }
+
+  function saveWeight() {
+    const value = parseFloat(
+      document.getElementById("weightInput").value
+    );
+
+    if (!value) {
+      alert("وزن را وارد کن");
+      return;
+    }
+
+    data.weight = value;
+
+    data.entries.unshift({
+      type: "وزن",
+      text: value + " کیلوگرم",
+      time: currentTime()
+    });
+
+    document.getElementById("weightInput").value = "";
+    saveData();
+  }
+
+  function setWater(number) {
+    data.water = data.water === number ? number - 1 : number;
+    saveData();
+  }
+
+  function addFood() {
+    const text = document
+      .getElementById("foodText")
+      .value.trim();
+
+    if (!text) {
+      alert("شرح غذا یا نوشیدنی را وارد کن");
+      return;
+    }
+
+    data.entries.unshift({
+      type: document.getElementById("mealType").value,
+      text: text,
+      calories:
+        document.getElementById("calorieInput").value,
+      time: currentTime()
+    });
+
+    document.getElementById("foodText").value = "";
+    document.getElementById("calorieInput").value = "";
+
+    saveData();
+  }
+
+  function addActivity() {
+    const text = document
+      .getElementById("activityInput")
+      .value.trim();
+
+    if (!text) {
+      alert("فعالیت را وارد کن");
+      return;
+    }
+
+    data.entries.unshift({
+      type: "فعالیت",
+      text: text,
+      time: currentTime()
+    });
+
+    document.getElementById("activityInput").value = "";
+    saveData();
+  }
+
+  function saveJournal() {
+    data.journal = {
+      mood: document.getElementById("mood").value,
+      text: document.getElementById("journalText").value
+    };
+
+    saveData();
+    alert("ژورنال ذخیره شد");
+  }
+
+  function render() {
+    document.getElementById("weightView").textContent =
+      data.weight ?? "—";
+
+    document.getElementById("waterView").textContent =
+      (data.water * 0.5).toFixed(1);
+
+    const bottles = document.getElementById("bottles");
+    bottles.innerHTML = "";
+
+    for (let i = 1; i <= 6; i++) {
+      const button = document.createElement("button");
+
+      button.className =
+        "bottle " + (i <= data.water ? "on" : "");
+
+      button.textContent = i;
+      button.onclick = () => setWater(i);
+
+      bottles.appendChild(button);
+    }
+
+    const entries = document.getElementById("entries");
+
+    if (!data.entries.length) {
+      entries.innerHTML =
+        '<p class="muted">هنوز چیزی ثبت نشده است.</p>';
+    } else {
+      entries.innerHTML = data.entries.map(item => `
+        <div class="entry">
+          <strong>${item.type}: ${item.text}</strong>
+          <small>
+            ${item.time}
+            ${item.calories ? " • " + item.calories + " kcal" : ""}
+          </small>
+        </div>
+      `).join("");
+    }
+
+    let message =
+      "امروز فقط یک کار کوچک را کامل کن.";
+
+    if (data.water < 2) {
+      message =
+        "قبل از کار بعدی یک بطری آب بنوش.";
+    }
+
+    if (data.water >= 4) {
+      message =
+        "آفرین؛ امروز در آب‌خوردن از الگوی قبلی جلوتر رفتی.";
+    }
+
+    if (data.entries.some(item => item.type === "فعالیت")) {
+      message =
+        "حرکت امروز ثبت شد؛ این رأی تو به نسخه آینده‌ات بود.";
+    }
+
+    document.getElementById("coach").textContent = message;
+
+    if (data.journal) {
+      document.getElementById("mood").value =
+        data.journal.mood;
+
+      document.getElementById("journalText").value =
+        data.journal.text;
+    }
+  }
+
+  render();
+</script>
+</body>
+</html>
