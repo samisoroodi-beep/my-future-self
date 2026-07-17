@@ -307,8 +307,16 @@
       minute: "2-digit"
     });
   }
+function currentDateKey() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
 
+  return `${year}-${month}-${day}`;
+}
   function showSection(id) {
+  
     document.querySelectorAll(".section").forEach(section => {
       section.classList.remove("active");
     });
@@ -332,7 +340,7 @@
     data.entries.unshift({
       type: "وزن",
       text: value + " کیلوگرم",
-      time: currentTime()
+      time: currentTime(),
       date: currentDateKey()
     });
 
