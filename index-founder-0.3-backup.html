@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#111111">
   <title>My Future Self</title>
-  <link rel="stylesheet" href="style.css">
-<style>
+
+  <style>
     *{box-sizing:border-box}
     body{
       margin:0;
@@ -149,31 +149,6 @@
 </head>
 
 <body>
-  <div id="authBox">
-  <h2>ورود به My Future Self</h2>
-
-  <input
-    id="authEmail"
-    type="email"
-    placeholder="ایمیل"
-  >
-
-  <input
-    id="authPassword"
-    type="password"
-    placeholder="رمز عبور"
-  >
-
-  <button onclick="signUp()">
-    ثبت‌نام
-  </button>
-
-  <button onclick="signIn()">
-    ورود
-  </button>
-
-  <p id="authMessage"></p>
-</div>
 <div class="app">
 
   <header>
@@ -308,7 +283,7 @@
 
 <script>
   const STORAGE_KEY = "my-future-self-founder";
-  let currentUser = null;  
+
   let data = {
     weight: null,
     water: 0,
@@ -320,118 +295,11 @@
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) data = JSON.parse(saved);
   } catch (error) {}
-async function signUp() {
-  const email = document
-    .getElementById("authEmail")
-    .value.trim();
 
-  const password = document
-    .getElementById("authPassword")
-    .value;
-
-  const message = document
-    .getElementById("authMessage");
-
-  if (!email || !password) {
-    message.textContent = "ایمیل و رمز عبور را وارد کن";
-    return;
+  function saveData() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    render();
   }
-
-  const { data, error } =
-    await supabaseClient.auth.signUp({
-      email: email,
-      password: password
-    });
-
-  if (error) {
-    message.textContent = error.message;
-    return;
-  }
-
-  currentUser = data.user;
-  message.textContent =
-    "ثبت‌نام انجام شد؛ ایمیل خود را بررسی کن";
-}
-
-
-
-async function signIn() {
-  const email = document
-    .getElementById("authEmail")
-    .value.trim();
-
-  const password = document
-    .getElementById("authPassword")
-    .value;
-
-  const message = document
-    .getElementById("authMessage");
-
-  if (!email || !password) {
-    message.textContent = "ایمیل و رمز عبور را وارد کن";
-    return;
-  }
-
-  const { data, error } =
-    await supabaseClient.auth.signInWithPassword({
-      email: email,
-      password: password
-    });
-
-  if (error) {
-    message.textContent = error.message;
-    return;
-  }
-
-  currentUser = data.user;
-  message.textContent = "ورود با موفقیت انجام شد";
-}
-
-    
-    
-    
-    
-
-
-  
-
-
-
-  async function saveData() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-
-  const { error } = await supabaseClient
-    .from("daily_logs")
-    .upsert([
-    {
-    weight: data.weight,
-    water: data.water,
-    log_date: currentDateKey(),
-    calories: data.entries
-      .filter(item => item.date === currentDateKey())
-      .reduce((total, item) => total + (Number(item.calories) || 0), 0),
-
-    mood: data.journal?.mood || null,
-
-    coach_message: document.getElementById("coach")?.textContent ?? null
-}
-], {
-  onConflict: "log_date"
-});  
-
-  if (error) {
-    console.error("Supabase save error:", error);
-  } else {
-    console.log("✅ Data saved to Supabase");
-  }
-
-  render();
-}
-      
-    
-
-  
-
 
   function currentTime() {
     return new Date().toLocaleTimeString("fa-IR", {
@@ -479,30 +347,7 @@ function currentDateKey() {
     document.getElementById("weightInput").value = "";
     saveData();
   }
-async function loadTodayData() {
 
-    const today = currentDateKey();
-
-    const { data: row, error } = await supabaseClient
-        .from("daily_logs")
-        .select("*")
-        .eq("log_date", today)
-        .maybeSingle();
-
-    if (error) {
-        console.error("Supabase load error:", error);
-        return;
-    }
-
-    if (!row) return;
-
-    data.weight = row.weight ?? null;
-    data.water = row.water ?? 0;
-
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-
-    render();
-}
   function setWater(number) {
     data.water = data.water === number ? number - 1 : number;
     saveData();
@@ -636,10 +481,6 @@ async function loadTodayData() {
   }
 
   render();
-  window.addEventListener("load", loadTodayData);
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-<script src="supabase.js"></script>
-
 </body>
 </html>
