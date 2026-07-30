@@ -306,20 +306,53 @@
   <button onclick="showSection('journal')">ژورنال</button>
 </nav>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="supabase.js"></script>
 <script>
   const STORAGE_KEY = "my-future-self-founder";
   let currentUser = null;  
-  let data = {
+  const defaultData = {
     weight: null,
     water: 0,
     entries: [],
     journal: null
   };
+  let data = { ...defaultData };
 
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) data = JSON.parse(saved);
-  } catch (error) {}
+  function currentStorageKey() {
+    return currentUser
+      ? `${STORAGE_KEY}:${currentUser.id}`
+      : `${STORAGE_KEY}:guest`;
+  }
+
+  function loadLocalData() {
+    try {
+      const userKey = currentStorageKey();
+      let saved = localStorage.getItem(userKey);
+
+      // Move the original Founder data into the first authenticated account
+      // so the existing timeline is preserved after per-user storage begins.
+      if (!saved && currentUser) {
+        saved = localStorage.getItem(STORAGE_KEY);
+
+        if (saved) {
+          localStorage.setItem(userKey, saved);
+          localStorage.removeItem(STORAGE_KEY);
+        }
+      }
+
+      const parsed = saved ? JSON.parse(saved) : {};
+      data = {
+        ...defaultData,
+        ...parsed,
+        entries: Array.isArray(parsed.entries) ? parsed.entries : []
+      };
+    } catch (error) {
+      console.error("Could not load local data:", error);
+      data = { ...defaultData };
+    }
+  }
+
 async function signUp() {
   const email = document
     .getElementById("authEmail")
@@ -351,6 +384,11 @@ async function signUp() {
   currentUser = data.user;
   message.textContent =
     "ثبت‌نام انجام شد؛ ایمیل خود را بررسی کن";
+
+  if (currentUser) {
+    loadLocalData();
+    await loadTodayData();
+  }
 }
 
 
@@ -385,6 +423,8 @@ async function signIn() {
 
   currentUser = data.user;
   message.textContent = "ورود با موفقیت انجام شد";
+  loadLocalData();
+  await loadTodayData();
 }
 
     
@@ -398,12 +438,18 @@ async function signIn() {
 
 
   async function saveData() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  localStorage.setItem(currentStorageKey(), JSON.stringify(data));
+
+  if (!currentUser) {
+    render();
+    return;
+  }
 
   const { error } = await supabaseClient
     .from("daily_logs")
     .upsert([
     {
+    user_id: currentUser.id,
     weight: data.weight,
     water: data.water,
     log_date: currentDateKey(),
@@ -416,7 +462,7 @@ async function signIn() {
     coach_message: document.getElementById("coach")?.textContent ?? null
 }
 ], {
-  onConflict: "log_date"
+  onConflict: "user_id,log_date"
 });  
 
   if (error) {
@@ -480,12 +526,14 @@ function currentDateKey() {
     saveData();
   }
 async function loadTodayData() {
+    if (!currentUser) return;
 
     const today = currentDateKey();
 
     const { data: row, error } = await supabaseClient
         .from("daily_logs")
         .select("*")
+        .eq("user_id", currentUser.id)
         .eq("log_date", today)
         .maybeSingle();
 
@@ -499,9 +547,27 @@ async function loadTodayData() {
     data.weight = row.weight ?? null;
     data.water = row.water ?? 0;
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    localStorage.setItem(currentStorageKey(), JSON.stringify(data));
 
     render();
+}
+
+async function initializeAuth() {
+    const { data: sessionData, error } =
+      await supabaseClient.auth.getSession();
+
+    if (error) {
+      console.error("Could not restore session:", error);
+    }
+
+    currentUser = sessionData?.session?.user ?? null;
+    loadLocalData();
+
+    if (currentUser) {
+      await loadTodayData();
+    } else {
+      render();
+    }
 }
   function setWater(number) {
     data.water = data.water === number ? number - 1 : number;
@@ -635,11 +701,8 @@ async function loadTodayData() {
     }
   }
 
-  render();
-  window.addEventListener("load", loadTodayData);
+  window.addEventListener("load", initializeAuth);
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-<script src="supabase.js"></script>
 
 </body>
 </html>
