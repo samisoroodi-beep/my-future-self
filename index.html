@@ -246,7 +246,33 @@
 
       <input id="calorieInput" type="number"
              placeholder="کالری تقریبی؛ اختیاری">
+<div id="foodPhotoSection">
+  <label for="foodPhotoInput">عکس غذا</label>
 
+  <input
+    id="foodPhotoInput"
+    type="file"
+    accept="image/*"
+    capture="environment"
+  >
+
+  <img
+    id="foodPhotoPreview"
+    alt="پیش‌نمایش عکس غذا"
+    hidden
+  >
+
+  <button
+    type="button"
+    class="primary"
+    onclick="analyzeFoodPhoto()"
+  >
+    تحلیل عکس غذا
+  </button>
+
+  <div id="foodAnalysisStatus" role="status"></div>
+  <div id="foodAnalysisResult" hidden></div>
+</div>
       <button class="primary" onclick="addFood()">
         ثبت در تایم‌لاین
       </button>
@@ -700,7 +726,188 @@ async function initializeAuth() {
         data.journal.text;
     }
   }
+let selectedFoodPhotoDataUrl = "";
 
+const foodPhotoInput = document.getElementById("foodPhotoInput");
+const foodPhotoPreview = document.getElementById("foodPhotoPreview");
+const foodAnalysisStatus = document.getElementById("foodAnalysisStatus");
+const foodAnalysisResult = document.getElementById("foodAnalysisResult");
+
+foodPhotoInput.addEventListener("change", async function (event) {
+  const file = event.target.files?.[0];
+
+  if (!file) {
+    selectedFoodPhotoDataUrl = "";
+    foodPhotoPreview.hidden = true;
+    foodAnalysisStatus.textContent = "";
+    return;
+  }
+
+  if (!file.type.startsWith("image/")) {
+    foodAnalysisStatus.textContent = "لطفاً فقط یک فایل عکس انتخاب کن.";
+    event.target.value = "";
+    return;
+  }
+
+  try {
+    foodAnalysisStatus.textContent = "در حال آماده‌سازی عکس...";
+    selectedFoodPhotoDataUrl = await resizeFoodPhoto(file);
+
+    foodPhotoPreview.src = selectedFoodPhotoDataUrl;
+    foodPhotoPreview.hidden = false;
+    foodAnalysisResult.hidden = true;
+    foodAnalysisStatus.textContent = "عکس آماده تحلیل است.";
+  } catch (error) {
+    console.error(error);
+    foodAnalysisStatus.textContent = "آماده‌سازی عکس انجام نشد. دوباره امتحان کن.";
+  }
+});
+
+function resizeFoodPhoto(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = function () {
+      const image = new Image();
+
+      image.onload = function () {
+        const maximumSize = 1280;
+        let width = image.width;
+        let height = image.height;
+
+        if (width > height && width > maximumSize) {
+          height = Math.round(height * maximumSize / width);
+          width = maximumSize;
+        } else if (height > maximumSize) {
+          width = Math.round(width * maximumSize / height);
+          height = maximumSize;
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+
+        const context = canvas.getContext("2d");
+        context.drawImage(image, 0, 0, width, height);
+
+        resolve(canvas.toDataURL("image/jpeg", 0.82));
+      };
+
+      image.onerror = reject;
+      image.src = reader.result;
+    };
+
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function analyzeFoodPhoto() {
+  if (!selectedFoodPhotoDataUrl) {
+    foodAnalysisStatus.textContent = "ابتدا یک عکس غذا انتخاب کن.";
+    return;
+  }
+
+  const analyzeButton =
+    document.querySelector('button[onclick="analyzeFoodPhoto()"]');
+
+  analyzeButton.disabled = true;
+  foodAnalysisStatus.textContent = "در حال تحلیل عکس غذا...";
+  foodAnalysisResult.hidden = true;
+
+  try {
+    const response = await fetch("/api/analyze-food", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        image: selectedFoodPhotoDataUrl
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "تحلیل عکس انجام نشد.");
+    }
+
+    const description =
+      data.description ||
+      data.meal_name ||
+      data.food_name ||
+      data.summary ||
+      "غذای موجود در تصویر";
+
+    const calories =
+      data.calories ??
+      data.estimated_calories ??
+      "";
+
+    const protein =
+      data.protein_g ??
+      data.protein ??
+      "—";
+
+    const carbs =
+      data.carbs_g ??
+      data.carbohydrates_g ??
+      data.carbs ??
+      "—";
+
+    const fat =
+      data.fat_g ??
+      data.fat ??
+      "—";
+
+    const fiber =
+      data.fiber_g ??
+      data.fiber ??
+      "—";
+
+    const confidence =
+      data.confidence ??
+      data.confidence_level ??
+      "نامشخص";
+
+    document.getElementById("foodText").value = description;
+
+    if (calories !== "") {
+      document.getElementById("calorieInput").value =
+        Math.round(Number(calories));
+    }
+
+    foodAnalysisResult.innerHTML = `
+      <p><strong>${escapeFoodHtml(description)}</strong></p>
+      <p>کالری تخمینی: ${calories === "" ? "—" : Math.round(Number(calories))}</p>
+      <p>پروتئین: ${protein} گرم</p>
+      <p>کربوهیدرات: ${carbs} گرم</p>
+      <p>چربی: ${fat} گرم</p>
+      <p>فیبر: ${fiber} گرم</p>
+      <p>میزان اطمینان: ${escapeFoodHtml(String(confidence))}</p>
+      <p>قبل از ثبت، توضیحات و کالری را بررسی و تأیید کن.</p>
+    `;
+
+    foodAnalysisResult.hidden = false;
+    foodAnalysisStatus.textContent =
+      "تخمین آماده است؛ هنوز چیزی در گزارش ثبت نشده.";
+  } catch (error) {
+    console.error(error);
+    foodAnalysisStatus.textContent =
+      error.message || "تحلیل عکس انجام نشد. دوباره امتحان کن.";
+  } finally {
+    analyzeButton.disabled = false;
+  }
+}
+
+function escapeFoodHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
   window.addEventListener("load", initializeAuth);
 </script>
 
