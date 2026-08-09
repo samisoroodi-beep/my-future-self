@@ -830,7 +830,8 @@ async function analyzeFoodPhoto() {
   analyzeButton.disabled = true;
   foodAnalysisStatus.textContent = "در حال تحلیل عکس غذا...";
   foodAnalysisResult.hidden = true;
-
+const clarification =
+  document.getElementById("foodClarification")?.value.trim() || "";
   try {
     const response = await fetch("/api/analyze-food", {
       method: "POST",
@@ -838,9 +839,16 @@ async function analyzeFoodPhoto() {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        image: selectedFoodPhotoDataUrl
-      })
-    });
+  image: selectedFoodPhotoDataUrl,
+  clarification: clarification
+})
+});
+  
+  
+
+        
+      
+    
 
     const data = await response.json();
     const totals = data.totals || {};
