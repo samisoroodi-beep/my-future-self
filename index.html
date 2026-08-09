@@ -272,6 +272,22 @@
 
   <div id="foodAnalysisStatus" role="status"></div>
   <div id="foodAnalysisResult" hidden></div>
+  <div id="foodClarificationSection" hidden>
+  <label for="foodClarification">توضیحات یا اصلاحات</label>
+
+  <textarea
+    id="foodClarification"
+    placeholder="مثلاً نصف غذا را خوردم، یک قاشق روغن داشت یا سس اضافه نشده بود"
+  ></textarea>
+
+  <button
+    type="button"
+    class="primary"
+    onclick="analyzeFoodPhoto()"
+  >
+    تحلیل دوباره با توضیحات
+  </button>
+</div>
 </div>
       <button class="primary" onclick="addFood()">
         ثبت در تایم‌لاین
