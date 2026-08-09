@@ -827,7 +827,7 @@ async function analyzeFoodPhoto() {
     });
 
     const data = await response.json();
-
+    const totals = data.totals || {};
     if (!response.ok) {
       throw new Error(data.error || "تحلیل عکس انجام نشد.");
     }
@@ -839,31 +839,31 @@ async function analyzeFoodPhoto() {
       data.summary ||
       "غذای موجود در تصویر";
 
-    const calories =
-      data.calories ??
-      data.estimated_calories ??
-      "";
+    const calories = totals.calories ?? "";
+      
+      
+      
+const carbs = totals.carbs_g ?? "—";
+ const protein = totals.protein_g ?? "—";   
+      
+      
+      
 
-    const protein =
-      data.protein_g ??
-      data.protein ??
-      "—";
+    
+      
+      
+      
+      
 
-    const carbs =
-      data.carbs_g ??
-      data.carbohydrates_g ??
-      data.carbs ??
-      "—";
+    const fat = totals.fat_g ?? "—";
+      
+      
+      
 
-    const fat =
-      data.fat_g ??
-      data.fat ??
-      "—";
-
-    const fiber =
-      data.fiber_g ??
-      data.fiber ??
-      "—";
+    const fiber = totals.fiber_g ?? "—";
+      
+      
+      
 
     const confidence =
       data.confidence ??
