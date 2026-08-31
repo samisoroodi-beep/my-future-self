@@ -620,59 +620,142 @@ async function initializeAuth() {
     saveData();
   }
 
-  async function addFood() {
-    const text = document.getElementById("foodText").value.trim();
+  function addFood() {
+  const text = document.getElementById("foodText").value.trim();
+  const mealType = document.getElementById("mealType").value;
+  const manualCalories = Number(
+    document.getElementById("calorieInput").value
+  );
 
-    if (!text) {
-      alert("شرح غذا یا نوشیدنی را وارد کن");
-      return;
-    }
+  if (!text) {
+    alert("شرح غذا یا نوشیدنی را وارد کن");
+    return;
+  }
 
-    const totals = lastFoodAnalysis?.totals || {};
-    const analyzedCalories = Number(totals.calories);
-    const manualCalories = Number(document.getElementById("calorieInput").value);
+  // آب ساده نیاز به تحلیل AI ندارد
+  const normalizedText = text
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
 
-    if (!lastFoodAnalysis && !manualCalories) {
-      alert("ابتدا غذا را تحلیل کن، سپس نتیجه را تأیید و ثبت کن.");
-      return;
-    }
+  const isPlainWater =
+    normalizedText === "آب" ||
+    normalizedText === "اب" ||
+    normalizedText === "water" ||
+    normalizedText.startsWith("آب ") ||
+normalizedText.startsWith("اب ") ||
+    normalizedText.includes("بطری آب") ||
+    normalizedText.includes("لیوان آب");
 
+  if (isPlainWater) {
     data.entries.unshift({
-      type: document.getElementById("mealType").value,
-      text,
-      calories: Number.isFinite(analyzedCalories) ? Math.round(analyzedCalories) : (manualCalories || null),
-      protein: Number(totals.protein_g) || null,
-      carbs: Number(totals.carbs_g) || null,
-      fat: Number(totals.fat_g) || null,
-      fiber: Number(totals.fiber_g) || null,
+      type: mealType,
+      text: text,
+      calories: null,
+      protein: null,
+      carbs: null,
+      fat: null,
+      fiber: null,
       time: currentTime(),
       date: currentDateKey()
     });
 
     document.getElementById("foodText").value = "";
     document.getElementById("calorieInput").value = "";
-    const clarificationInput = document.getElementById("foodClarification");
-    if (clarificationInput) clarificationInput.value = "";
 
     lastFoodAnalysis = null;
-    selectedFoodPhotoDataUrl = "";
-    foodPhotoInput.value = "";
-    foodPhotoPreview.hidden = true;
-    foodAnalysisResult.hidden = true;
-    foodAnalysisStatus.textContent = "غذا در تایم‌لاین ثبت شد.";
 
-    await saveData();
+    saveData();
+    return;
+  
+
+  // برای غذا/نوشیدنی دیگر:
+  // یا باید تحلیل انجام شده باشد یا کالری دستی وارد شده باشد
+  if (!lastFoodAnalysis && !manualCalories) {
+    alert("ابتدا غذا را تحلیل کن یا کالری را دستی وارد کن");
+    return;
   }
 
-  function addActivity() {
-    const text = document
-      .getElementById("activityInput")
-      .value.trim();
+  const totals = lastFoodAnalysis?.totals || {};
+  const analyzedCalories = Number(totals.calories);
 
-    if (!text) {
-      alert("فعالیت را وارد کن");
-      return;
-    }
+  data.entries.unshift({
+    type: mealType,
+    text: text,
+
+    calories: Number.isFinite(analyzedCalories)
+      ? Math.round(analyzedCalories)
+      : (manualCalories || null),
+
+    protein: Number(totals.protein_g) || null,
+    carbs: Number(totals.carbs_g) || null,
+    fat: Number(totals.fat_g) || null,
+    fiber: Number(totals.fiber_g) || null,
+
+    time: currentTime(),
+    date: currentDateKey()
+  });
+
+  document.getElementById("foodText").value = "";
+  document.getElementById("calorieInput").value = "";
+
+  // خیلی مهم: تحلیل غذای قبلی وارد غذای بعدی نشود
+  lastFoodAnalysis = null;
+
+  saveData();
+}
+    
+
+    
+      
+      
+    
+
+    
+    
+    
+
+    
+      
+      
+    
+
+    
+      
+      
+      
+      
+      
+      
+      
+      
+      
+    
+
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+
+    
+  
+
+  
+    
+      
+      
+
+    
+      
+      
+    
 
     data.entries.unshift({
       type: "فعالیت",
