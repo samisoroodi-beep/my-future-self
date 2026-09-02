@@ -706,7 +706,24 @@ normalizedText.startsWith("اب ") ||
 }
     
 
-    
+   function addActivity() {
+    const text = document.getElementById("activityInput").value.trim();
+
+    if (!text) {
+        alert("فعالیت را وارد کن");
+        return;
+    }
+
+    data.entries.unshift({
+        type: "فعالیت",
+        text: text,
+        time: currentTime(),
+        date: currentDateKey()
+    });
+
+    document.getElementById("activityInput").value = "";
+    saveData();
+} 
       
       
     
